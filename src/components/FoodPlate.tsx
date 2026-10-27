@@ -6,11 +6,14 @@ import { shadow } from "@/theme";
 export function FoodPlate({
   product,
   size = 110,
+  width,
 }: {
   product: Pick<Product, "emoji" | "tint" | "image">;
   size?: number;
+  width?: number | `${number}%` | "auto";
 }) {
   const inner = size * 0.8;
+  const w = width ?? size;
   return (
     <View
       style={[
@@ -21,13 +24,15 @@ export function FoodPlate({
           height: size,
           borderRadius: 10,
           backgroundColor: product.tint,
+          overflow: "hidden",
         },
       ]}
     >
       {product.image ? (
         <Image
           source={product.image}
-          style={{ width: "100%", height: size, borderRadius: 10 }}
+          style={{ width: "100%", height: "100%", borderRadius: 10 }}
+          resizeMode="cover"
         />
       ) : (
         <View

@@ -72,8 +72,8 @@ export function ProductCard({ product }: { product: Product }) {
         </View>
       </View>
 
-      <View style={{ alignItems: "center", marginTop: 6 }}>
-        <FoodPlate product={product} size={104} />
+      <View style={{ alignItems: "center", marginTop: 6, width: "100%" }}>
+        <FoodPlate product={product} size={104} width="100%" />
       </View>
 
       <T numberOfLines={1} style={s.name}>

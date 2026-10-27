@@ -62,6 +62,11 @@ type CartState = {
   lines: Line[];
   promo: string | null;
   add: (i: AddInput) => void;
+  updateLine: (
+    oldKey: string,
+    updated: { size: SizeId; extras: string[]; qty: number; note?: string },
+  ) => void;
+  removeLine: (key: string) => void;
   setQty: (key: string, qty: number) => void;
   clear: () => void;
   applyPromo: (code: string) => boolean;
@@ -106,6 +111,49 @@ export const useCart = create<CartState>()(
             ],
           };
         }),
+      updateLine: (oldKey, updated) =>
+        set((s) => {
+          const oldLine = s.lines.find((l) => l.key === oldKey);
+          if (!oldLine) return s;
+          const newKey = lineKey({
+            productId: oldLine.productId,
+            size: updated.size,
+            extras: updated.extras,
+          });
+          if (newKey !== oldKey && s.lines.some((l) => l.key === newKey)) {
+            return {
+              lines: s.lines
+                .filter((l) => l.key !== oldKey)
+                .map((l) =>
+                  l.key === newKey
+                    ? {
+                        ...l,
+                        qty: Math.min(20, l.qty + updated.qty),
+                        note: updated.note || l.note,
+                      }
+                    : l,
+                ),
+            };
+          }
+          return {
+            lines: s.lines.map((l) =>
+              l.key === oldKey
+                ? {
+                    ...l,
+                    key: newKey,
+                    size: updated.size,
+                    extras: updated.extras,
+                    qty: updated.qty,
+                    note: updated.note,
+                  }
+                : l,
+            ),
+          };
+        }),
+      removeLine: (key) =>
+        set((s) => ({
+          lines: s.lines.filter((l) => l.key !== key),
+        })),
       setQty: (key, qty) =>
         set((s) => ({
           lines:
