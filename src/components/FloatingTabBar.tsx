@@ -34,7 +34,7 @@ function Badge({ count }: { count: number }) {
   );
 }
 
-export function FloatingTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
+export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardVisible();
   const count = useCartCount();
@@ -48,10 +48,14 @@ export function FloatingTabBar({ state, emitter, navigateToTab }: BottomTabBarPr
           if (!tab) return null;
           const focused = state.index === index;
           const press = () => {
-            const e = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-            if (!focused && !e.defaultPrevented) {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!focused && !event.defaultPrevented) {
               tap();
-              navigateToTab(route.key);
+              navigation.navigate(route.name, route.params);
             }
           };
           return (
