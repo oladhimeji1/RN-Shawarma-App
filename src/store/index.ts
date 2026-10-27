@@ -24,6 +24,7 @@ type AuthState = {
   continueAsGuest: () => void;
   signOut: () => void;
   finishOnboarding: () => void;
+  resetOnboarding: () => void;
 };
 export const useAuth = create<AuthState>()(
   persist(
@@ -36,6 +37,7 @@ export const useAuth = create<AuthState>()(
       continueAsGuest: () => set({ guest: true, user: null }),
       signOut: () => set({ user: null, guest: false }),
       finishOnboarding: () => set({ seenOnboarding: true }),
+      resetOnboarding: () => set({ seenOnboarding: false }),
     }),
     {
       name: "auth",
