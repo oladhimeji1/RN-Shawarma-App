@@ -78,7 +78,7 @@ export const MENU: Product[] = [
     name: "Classic Chicken",
     blurb: "Garlic toum & pickles",
     category: "chicken",
-    price: 7.5,
+    price: 5000,
     discount: 25,
     rating: 4.8,
     reviews: 412,

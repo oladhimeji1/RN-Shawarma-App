@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import { getProduct, SizeId } from '@/data/menu';
-import { User } from '@/services/auth';
-import { computeTotals, describeLine, Line, PROMOS, unitPrice } from '@/utils/pricing';
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { getProduct, SizeId } from "@/data/menu";
+import { User } from "@/services/auth";
+import {
+  computeTotals,
+  describeLine,
+  Line,
+  PROMOS,
+  unitPrice,
+} from "@/utils/pricing";
 
 const storage = createJSONStorage(() => AsyncStorage);
 
@@ -32,16 +38,26 @@ export const useAuth = create<AuthState>()(
       finishOnboarding: () => set({ seenOnboarding: true }),
     }),
     {
-      name: 'auth',
+      name: "auth",
       storage,
       // "Keep me signed in" unchecked => the session isn't written to disk. Guests start at login next launch.
-      partialize: (s) => ({ user: s.remember ? s.user : null, remember: s.remember, seenOnboarding: s.seenOnboarding }),
+      partialize: (s) => ({
+        user: s.remember ? s.user : null,
+        remember: s.remember,
+        seenOnboarding: s.seenOnboarding,
+      }),
     },
   ),
 );
 
 /* ---------- cart ---------- */
-type AddInput = { productId: string; size: SizeId; extras: string[]; qty: number; note?: string };
+type AddInput = {
+  productId: string;
+  size: SizeId;
+  extras: string[];
+  qty: number;
+  note?: string;
+};
 type CartState = {
   lines: Line[];
   promo: string | null;
@@ -51,8 +67,8 @@ type CartState = {
   applyPromo: (code: string) => boolean;
   removePromo: () => void;
 };
-const lineKey = (i: Pick<AddInput, 'productId' | 'size' | 'extras'>) =>
-  `${i.productId}|${i.size}|${[...i.extras].sort().join(',')}`;
+const lineKey = (i: Pick<AddInput, "productId" | "size" | "extras">) =>
+  `${i.productId}|${i.size}|${[...i.extras].sort().join(",")}`;
 
 export const useCart = create<CartState>()(
   persist(
@@ -66,15 +82,38 @@ export const useCart = create<CartState>()(
           if (existing) {
             return {
               lines: s.lines.map((l) =>
-                l.key === key ? { ...l, qty: Math.min(20, l.qty + i.qty), note: i.note || l.note } : l,
+                l.key === key
+                  ? {
+                      ...l,
+                      qty: Math.min(20, l.qty + i.qty),
+                      note: i.note || l.note,
+                    }
+                  : l,
               ),
             };
           }
-          return { lines: [...s.lines, { key, productId: i.productId, size: i.size, extras: i.extras, qty: i.qty, note: i.note }] };
+          return {
+            lines: [
+              ...s.lines,
+              {
+                key,
+                productId: i.productId,
+                size: i.size,
+                extras: i.extras,
+                qty: i.qty,
+                note: i.note,
+              },
+            ],
+          };
         }),
       setQty: (key, qty) =>
         set((s) => ({
-          lines: qty <= 0 ? s.lines.filter((l) => l.key !== key) : s.lines.map((l) => (l.key === key ? { ...l, qty: Math.min(20, qty) } : l)),
+          lines:
+            qty <= 0
+              ? s.lines.filter((l) => l.key !== key)
+              : s.lines.map((l) =>
+                  l.key === key ? { ...l, qty: Math.min(20, qty) } : l,
+                ),
         })),
       clear: () => set({ lines: [], promo: null }),
       applyPromo: (code) => {
@@ -85,10 +124,11 @@ export const useCart = create<CartState>()(
       },
       removePromo: () => set({ promo: null }),
     }),
-    { name: 'cart', storage },
+    { name: "cart", storage },
   ),
 );
-export const useCartCount = () => useCart((s) => s.lines.reduce((n, l) => n + l.qty, 0));
+export const useCartCount = () =>
+  useCart((s) => s.lines.reduce((n, l) => n + l.qty, 0));
 export const useCartTotals = () => {
   const lines = useCart((s) => s.lines);
   const promo = useCart((s) => s.promo);
@@ -101,26 +141,43 @@ export const useFavs = create<FavState>()(
   persist(
     (set) => ({
       ids: [],
-      toggle: (id) => set((s) => ({ ids: s.ids.includes(id) ? s.ids.filter((x) => x !== id) : [...s.ids, id] })),
+      toggle: (id) =>
+        set((s) => ({
+          ids: s.ids.includes(id)
+            ? s.ids.filter((x) => x !== id)
+            : [...s.ids, id],
+        })),
     }),
-    { name: 'favs', storage },
+    { name: "favs", storage },
   ),
 );
 
 /* ---------- addresses ---------- */
-export type Address = { id: string; label: 'Home' | 'Work' | 'Other'; line: string; note?: string };
+export type Address = {
+  id: string;
+  label: "Home" | "Work" | "Other";
+  line: string;
+  note?: string;
+};
 type AddressState = {
   items: Address[];
   selectedId: string | null;
-  add: (a: Omit<Address, 'id'>) => void;
+  add: (a: Omit<Address, "id">) => void;
   remove: (id: string) => void;
   select: (id: string) => void;
 };
 export const useAddresses = create<AddressState>()(
   persist(
     (set, get) => ({
-      items: [{ id: 'a1', label: 'Home', line: '12 Palm Avenue, Central District', note: 'Blue gate, ring twice' }],
-      selectedId: 'a1',
+      items: [
+        {
+          id: "a1",
+          label: "Home",
+          line: "3rd Avenne, Gwarimpa, Abuja",
+          note: "First Gate, near the mosque",
+        },
+      ],
+      selectedId: "a1",
       add: (a) => {
         const id = `a_${Date.now()}`;
         set((s) => ({ items: [...s.items, { ...a, id }], selectedId: id }));
@@ -128,11 +185,15 @@ export const useAddresses = create<AddressState>()(
       remove: (id) =>
         set((s) => {
           const items = s.items.filter((x) => x.id !== id);
-          return { items, selectedId: s.selectedId === id ? (items[0]?.id ?? null) : s.selectedId };
+          return {
+            items,
+            selectedId:
+              s.selectedId === id ? (items[0]?.id ?? null) : s.selectedId,
+          };
         }),
       select: (id) => set({ selectedId: id }),
     }),
-    { name: 'addresses', storage },
+    { name: "addresses", storage },
   ),
 );
 export const useSelectedAddress = () => {
@@ -149,25 +210,32 @@ export type Order = {
   address: string;
   items: { name: string; qty: number; detail: string; price: number }[];
 };
-type OrderState = { orders: Order[]; place: (o: Omit<Order, 'id' | 'createdAt'>) => string };
+type OrderState = {
+  orders: Order[];
+  place: (o: Omit<Order, "id" | "createdAt">) => string;
+};
 export const useOrders = create<OrderState>()(
   persist(
     (set) => ({
       orders: [],
       place: (o) => {
         const id = `SH-${Math.floor(1000 + Math.random() * 9000)}`;
-        set((s) => ({ orders: [{ ...o, id, createdAt: Date.now() }, ...s.orders] }));
+        set((s) => ({
+          orders: [{ ...o, id, createdAt: Date.now() }, ...s.orders],
+        }));
         return id;
       },
     }),
-    { name: 'orders', storage },
+    { name: "orders", storage },
   ),
 );
 
 /** Demo status, derived from age. Replace with real status from your API. */
-export function orderStatus(createdAt: number): 'Preparing' | 'On the way' | 'Delivered' {
+export function orderStatus(
+  createdAt: number,
+): "Preparing" | "On the way" | "Delivered" {
   const mins = (Date.now() - createdAt) / 60000;
-  return mins < 8 ? 'Preparing' : mins < 25 ? 'On the way' : 'Delivered';
+  return mins < 8 ? "Preparing" : mins < 25 ? "On the way" : "Delivered";
 }
 
 /** Build the order payload from the current cart. */
@@ -175,16 +243,35 @@ export function buildOrderItems(lines: Line[]) {
   return lines.flatMap((l) => {
     const p = getProduct(l.productId);
     if (!p) return [];
-    return [{ name: p.name, qty: l.qty, detail: describeLine(l), price: unitPrice(p, l.size, l.extras) * l.qty }];
+    return [
+      {
+        name: p.name,
+        qty: l.qty,
+        detail: describeLine(l),
+        price: unitPrice(p, l.size, l.extras) * l.qty,
+      },
+    ];
   });
 }
 
 /* ---------- support chat (in-memory) ---------- */
-export type Msg = { id: string; from: 'me' | 'bot'; text: string };
-type ChatState = { messages: Msg[]; push: (m: Omit<Msg, 'id'>) => void };
+export type Msg = { id: string; from: "me" | "bot"; text: string };
+type ChatState = { messages: Msg[]; push: (m: Omit<Msg, "id">) => void };
 export const useChat = create<ChatState>((set) => ({
-  messages: [{ id: 'm0', from: 'bot', text: 'Hi! I’m the Shawarma support bot. Ask about an order, your address or ingredients.' }],
-  push: (m) => set((s) => ({ messages: [...s.messages, { ...m, id: `m${s.messages.length}_${Date.now()}` }] })),
+  messages: [
+    {
+      id: "m0",
+      from: "bot",
+      text: "Hi! I’m the Shawarma support bot. Ask about an order, your address or ingredients.",
+    },
+  ],
+  push: (m) =>
+    set((s) => ({
+      messages: [
+        ...s.messages,
+        { ...m, id: `m${s.messages.length}_${Date.now()}` },
+      ],
+    })),
 }));
 
 /* ---------- hydration gate ---------- */
@@ -194,7 +281,9 @@ export function useStoresHydrated() {
   const [ready, setReady] = useState(allHydrated());
   useEffect(() => {
     if (allHydrated()) return setReady(true);
-    const unsubs = persisted.map((s) => s.persist.onFinishHydration(() => allHydrated() && setReady(true)));
+    const unsubs = persisted.map((s) =>
+      s.persist.onFinishHydration(() => allHydrated() && setReady(true)),
+    );
     return () => unsubs.forEach((u) => u());
   }, []);
   return ready;
