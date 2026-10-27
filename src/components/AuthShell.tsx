@@ -96,8 +96,8 @@ export function AuthShell({
           <Image
             source={chefImage}
             style={{
-              width: compact ? 210 : 280,
-              height: compact ? 140 : 190,
+              width: compact ? 210 : 380,
+              height: compact ? 140 : 280,
             }}
             resizeMode="contain"
           />
